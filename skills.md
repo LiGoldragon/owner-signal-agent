@@ -1,4 +1,4 @@
-# skills — owner-signal-persona-agent
+# skills — owner-signal-agent
 
 Read this before editing the owner-only agent contract.
 
@@ -21,8 +21,8 @@ no actors, no sockets, no storage, and no backend process logic.
 ## Invariants
 
 - Agent lifecycle and backend policy orders live here, not in the ordinary
-  `signal-persona-agent` contract.
+  `signal-agent` contract.
 - Every request variant declares a contract-local Signal root verb through
   `signal_channel!`.
-- Shared agent nouns stay aligned with the future ordinary contract.
-- Runtime interpretation stays in `persona-agent`.
+- Shared agent nouns stay aligned with the ordinary contract.
+- Runtime interpretation stays in `agent`.

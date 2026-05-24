@@ -1,5 +1,5 @@
 {
-  description = "OwnerSignal contract for privileged Persona agent policy commands.";
+  description = "OwnerSignal contract for privileged agent policy commands.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -79,7 +79,7 @@
         };
 
         devShells.default = pkgs.mkShell {
-          name = "owner-signal-persona-agent";
+          name = "owner-signal-agent";
           packages = [
             pkgs.jujutsu
             pkgs.pkg-config

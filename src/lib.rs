@@ -1,6 +1,6 @@
-//! OwnerSignal contract for privileged `persona-agent` policy commands.
+//! OwnerSignal contract for privileged `agent` policy commands.
 //!
-//! Ordinary router-facing agent traffic belongs in `signal-persona-agent`.
+//! Ordinary router-facing agent traffic belongs in `signal-agent`.
 //! This crate carries owner-only orders for spawning and retiring agents,
 //! lane backend policy, backend configuration, and staged routing through
 //! the agent front door.

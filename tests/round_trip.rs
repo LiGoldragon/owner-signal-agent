@@ -1,5 +1,5 @@
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
-use owner_signal_persona_agent::{
+use owner_signal_agent::{
     AgentBackend, AgentIdentifier, AgentRetired, AgentRouteSet, AgentSpawned, BackendAvailability,
     BackendConfiguration, BackendConfigurationMutated, BackendEndpoint, BackendPolicySet,
     ExtensionName, Frame, FrameBody, LaneName, ModelName, MutateBackendConfiguration, Operation,

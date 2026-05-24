@@ -1,20 +1,18 @@
-# owner-signal-persona-agent — architecture
+# owner-signal-agent — architecture
 
-*OwnerSignal contract for privileged Persona agent policy commands.*
+*OwnerSignal contract for privileged agent policy commands.*
 
 ## Role
 
-`owner-signal-persona-agent` is the owner-only Signal surface for
-`persona-agent`. It carries orchestrate-to-agent authority orders that spawn and
+`owner-signal-agent` is the owner-only Signal surface for
+`agent`. It carries orchestrate-to-agent authority orders that spawn and
 retire agent runs, set lane default-backend policy, mutate backend
 configuration, and toggle per-lane routing through the new agent front door.
 
-The ordinary router-facing contract lives in `signal-persona-agent`. At this
-repo's creation that ordinary contract is not present, so this crate carries
+The ordinary router-facing contract lives in `signal-agent`. This crate carries
 local compatible definitions for the shared nouns that both contracts need:
-`AgentIdentifier`, `AgentBackend`, `LaneName`, and `BackendConfiguration`. When
-`signal-persona-agent` lands, those nouns are factored to a shared surface or
-one contract re-exports the other according to the then-current design.
+`AgentIdentifier`, `AgentBackend`, `LaneName`, and `BackendConfiguration`.
+Those nouns stay aligned until a shared surface or re-export decision lands.
 
 This repo implements bead `primary-gvgj.2` from the agent-component wave in
 `reports/designer/309-design-agent-component-abstraction.md` and is sequenced by
@@ -25,7 +23,7 @@ This repo implements bead `primary-gvgj.2` from the agent-component wave in
 This crate owns the typed wire vocabulary for owner-only policy. It does not
 own daemon actors, backend process supervision, redb tables, socket listeners,
 routing decisions, or lowering to Sema effects. Runtime interpretation belongs
-in `persona-agent`.
+in `agent`.
 
 ## Contract surface
 
@@ -69,7 +67,7 @@ naming forbids the abbreviated `Config` form.
   agent contract.
 - Wire operations are contract-local owner verbs, not Sema class wrappers.
 - Wire enums are closed. There is no `Unknown` escape hatch.
-- Shared nouns remain compatible with the future ordinary contract.
+- Shared nouns remain compatible with the ordinary contract.
 - Round-trip tests cover rkyv frame encoding and NOTA text encoding.
 - Contract code contains no Kameo, Tokio, redb, sockets, process spawning, or
   daemon policy logic.

@@ -1,15 +1,15 @@
 [package]
-name         = "owner-signal-persona-agent"
+name         = "owner-signal-agent"
 version      = "0.1.0"
 edition      = "2024"
 rust-version = "1.85"
 license      = "MIT OR Apache-2.0"
-repository   = "https://github.com/LiGoldragon/owner-signal-persona-agent"
-description  = "OwnerSignal contract for privileged Persona agent policy commands."
+repository   = "https://github.com/LiGoldragon/owner-signal-agent"
+description  = "OwnerSignal contract for privileged agent policy commands."
 publish      = false
 
 [lib]
-name = "owner_signal_persona_agent"
+name = "owner_signal_agent"
 path = "src/lib.rs"
 
 [dependencies]
