@@ -5,7 +5,7 @@
 //! lane backend policy, backend configuration, and staged routing through
 //! the agent front door.
 
-use nota_codec::{NotaEnum, NotaRecord, NotaTransparent};
+use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use signal_frame::signal_channel;
 use signal_sema::SemaObservation;
@@ -19,7 +19,8 @@ pub use signal_frame::{
     Archive,
     RkyvSerialize,
     RkyvDeserialize,
-    NotaTransparent,
+    NotaEncode,
+    NotaDecode,
     Debug,
     Clone,
     PartialEq,
@@ -44,7 +45,8 @@ impl AgentIdentifier {
     Archive,
     RkyvSerialize,
     RkyvDeserialize,
-    NotaTransparent,
+    NotaEncode,
+    NotaDecode,
     Debug,
     Clone,
     PartialEq,
@@ -66,7 +68,16 @@ impl LaneName {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub struct WirePath(String);
 
@@ -81,7 +92,16 @@ impl WirePath {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub struct ModelName(String);
 
@@ -96,7 +116,16 @@ impl ModelName {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaTransparent, Debug, Clone, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub struct ExtensionName(String);
 
@@ -111,7 +140,17 @@ impl ExtensionName {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum AgentBackend {
     Claude,
@@ -123,7 +162,17 @@ pub enum AgentBackend {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum ThinkingLevel {
     Disabled,
@@ -132,14 +181,26 @@ pub enum ThinkingLevel {
     High,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub enum BackendEndpoint {
     UnixSocket(WirePath),
     InternalFixture,
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum BackendQuarantineReason {
     HealthCheckFailed,
@@ -148,19 +209,25 @@ pub enum BackendQuarantineReason {
     UnsafeConfiguration,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct BackendQuarantine {
     pub reason: BackendQuarantineReason,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub enum BackendAvailability {
     Enabled,
     Disabled,
     Quarantined(BackendQuarantine),
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct BackendConfiguration {
     pub endpoint: BackendEndpoint,
     pub availability: BackendAvailability,
@@ -169,7 +236,9 @@ pub struct BackendConfiguration {
     pub extensions: Vec<ExtensionName>,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct SpawnAgent {
     pub agent: AgentIdentifier,
     pub backend: AgentBackend,
@@ -177,7 +246,17 @@ pub struct SpawnAgent {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum RetirementReason {
     OwnerRequested,
@@ -186,61 +265,89 @@ pub enum RetirementReason {
     Superseded,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct RetireAgent {
     pub agent: AgentIdentifier,
     pub reason: RetirementReason,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct SetBackendPolicy {
     pub lane: LaneName,
     pub default_backend: AgentBackend,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct MutateBackendConfiguration {
     pub backend: AgentBackend,
     pub configuration: BackendConfiguration,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct RouteThroughAgent {
     pub lane: LaneName,
     pub enabled: bool,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct AgentSpawned {
     pub agent: AgentIdentifier,
     pub backend: AgentBackend,
     pub lane: LaneName,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct AgentRetired {
     pub agent: AgentIdentifier,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct BackendPolicySet {
     pub lane: LaneName,
     pub default_backend: AgentBackend,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct BackendConfigurationMutated {
     pub backend: AgentBackend,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct AgentRouteSet {
     pub lane: LaneName,
     pub enabled: bool,
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum RejectionReason {
     AgentAlreadyActive,
@@ -252,13 +359,25 @@ pub enum RejectionReason {
     PolicyStoreUnavailable,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct OrderRejected {
     pub reason: RejectionReason,
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum UnimplementedReason {
     NotBuiltYet,
@@ -266,7 +385,9 @@ pub enum UnimplementedReason {
     PolicyStoreUnavailable,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct RequestUnimplemented {
     pub reason: UnimplementedReason,
 }
@@ -295,12 +416,16 @@ signal_channel! {
     }
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct OperationReceived {
     pub operation: OperationKind,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct EffectEmitted {
     pub observation: SemaObservation,
 }

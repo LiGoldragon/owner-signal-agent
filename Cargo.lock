@@ -38,12 +38,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
-name = "camino"
-version = "1.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e629a66d692cb9ff1a1c664e41771b3dcaf961985a9774c0eb0bd1b51cf60a48"
-
-[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -128,19 +122,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "nota-codec"
-version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/nota-codec.git?branch=main#c366e3ccb75b10840062e4d4c289368afce28bf5"
+name = "nota-next"
+version = "0.3.0"
+source = "git+https://github.com/LiGoldragon/nota-next.git?branch=main#f0e435a629f8312b173b0f8564c17ee0a4001561"
 dependencies = [
- "camino",
- "nota-derive",
- "thiserror",
+ "nota-next-derive",
+ "rkyv",
 ]
 
 [[package]]
-name = "nota-derive"
-version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/nota-derive.git?branch=main#f22a947a94024be2d9b60eba3ee51dd492b29852"
+name = "nota-next-derive"
+version = "0.2.0"
+source = "git+https://github.com/LiGoldragon/nota-next.git?branch=main#f0e435a629f8312b173b0f8564c17ee0a4001561"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -157,7 +150,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 name = "owner-signal-agent"
 version = "0.1.0"
 dependencies = [
- "nota-codec",
+ "nota-next",
  "rkyv",
  "signal-frame",
  "signal-sema",
@@ -270,9 +263,9 @@ checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 [[package]]
 name = "signal-frame"
 version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/signal-frame.git?branch=main#75837dce71ca59a8e675ed2082076a4a8fc07339"
+source = "git+https://github.com/LiGoldragon/signal-frame.git?branch=main#904bb2fdb0210bbeec9f9f4edc9f8b88341522a3"
 dependencies = [
- "nota-codec",
+ "nota-next",
  "paste",
  "rkyv",
  "signal-frame-macros",
@@ -282,7 +275,7 @@ dependencies = [
 [[package]]
 name = "signal-frame-macros"
 version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/signal-frame.git?branch=main#75837dce71ca59a8e675ed2082076a4a8fc07339"
+source = "git+https://github.com/LiGoldragon/signal-frame.git?branch=main#904bb2fdb0210bbeec9f9f4edc9f8b88341522a3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -292,9 +285,9 @@ dependencies = [
 [[package]]
 name = "signal-sema"
 version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/signal-sema.git?branch=main#1604cceb787389274127df7e3a273c164db61feb"
+source = "git+https://github.com/LiGoldragon/signal-sema.git?branch=main#4f75d1c31b7481e3f212e1885b98939a5172ce1a"
 dependencies = [
- "nota-codec",
+ "nota-next",
  "rkyv",
  "thiserror",
 ]
@@ -365,9 +358,9 @@ checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
 name = "uuid"
-version = "1.23.1"
+version = "1.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddd74a9687298c6858e9b88ec8935ec45d22e8fd5e6394fa1bd4e99a87789c76"
+checksum = "d258b83ceec21034727ecee8c382cfa6c3e133699b0742c64571814fb420c9f7"
 dependencies = [
  "js-sys",
  "wasm-bindgen",

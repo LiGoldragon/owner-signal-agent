@@ -1,4 +1,4 @@
-use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
+use nota_next::{NotaDecode, NotaEncode, NotaSource};
 use owner_signal_agent::{
     AgentBackend, AgentIdentifier, AgentRetired, AgentRouteSet, AgentSpawned, BackendAvailability,
     BackendConfiguration, BackendConfigurationMutated, BackendEndpoint, BackendPolicySet,
@@ -82,13 +82,12 @@ fn round_trip_nota<Value>(value: Value, expected: &str)
 where
     Value: NotaEncode + NotaDecode + PartialEq + std::fmt::Debug,
 {
-    let mut encoder = Encoder::new();
-    value.encode(&mut encoder).expect("encode nota text");
-    let encoded = encoder.into_string();
+    let encoded = value.to_nota();
     assert_eq!(encoded, expected);
 
-    let mut decoder = Decoder::new(&encoded);
-    let recovered = Value::decode(&mut decoder).expect("decode nota text");
+    let recovered = NotaSource::new(&encoded)
+        .parse::<Value>()
+        .expect("decode nota text");
     assert_eq!(recovered, value);
     assert!(
         CANONICAL.contains(expected),
@@ -227,35 +226,35 @@ fn owner_agent_nota_text_shape_stays_canonical() {
             backend: AgentBackend::Claude,
             lane: lane(),
         }),
-        "(SpawnAgent (agent-alpha Claude designer))",
+        "(SpawnAgent ([agent-alpha] Claude [designer]))",
     );
     round_trip_nota(
         Operation::RetireAgent(RetireAgent {
             agent: agent(),
             reason: RetirementReason::OwnerRequested,
         }),
-        "(RetireAgent (agent-alpha OwnerRequested))",
+        "(RetireAgent ([agent-alpha] OwnerRequested))",
     );
     round_trip_nota(
         Operation::SetBackendPolicy(SetBackendPolicy {
             lane: lane(),
             default_backend: AgentBackend::Claude,
         }),
-        "(SetBackendPolicy (designer Claude))",
+        "(SetBackendPolicy ([designer] Claude))",
     );
     round_trip_nota(
         Operation::MutateBackendConfiguration(MutateBackendConfiguration {
             backend: AgentBackend::Claude,
             configuration: backend_configuration(),
         }),
-        "(MutateBackendConfiguration (Claude ((UnixSocket claude-socket) Enabled (Some claude-sonnet) High [filesystem])))",
+        "(MutateBackendConfiguration (Claude ((UnixSocket [claude-socket]) Enabled (Some [claude-sonnet]) High [[filesystem]])))",
     );
     round_trip_nota(
         Operation::RouteThroughAgent(RouteThroughAgent {
             lane: lane(),
             enabled: true,
         }),
-        "(RouteThroughAgent (designer True))",
+        "(RouteThroughAgent ([designer] True))",
     );
     round_trip_nota(
         AgentReply::AgentSpawned(AgentSpawned {
@@ -263,7 +262,7 @@ fn owner_agent_nota_text_shape_stays_canonical() {
             backend: AgentBackend::Claude,
             lane: lane(),
         }),
-        "(AgentSpawned (agent-alpha Claude designer))",
+        "(AgentSpawned ([agent-alpha] Claude [designer]))",
     );
     round_trip_nota(
         AgentReply::RequestUnimplemented(RequestUnimplemented {
