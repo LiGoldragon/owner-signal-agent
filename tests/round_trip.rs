@@ -1,12 +1,12 @@
-use nota_next::{NotaDecode, NotaEncode, NotaSource};
-use owner_signal_agent::{
+use meta_signal_agent::{
     AgentBackend, AgentIdentifier, AgentRetired, AgentRouteSet, AgentSpawned, BackendAvailability,
     BackendConfiguration, BackendConfigurationMutated, BackendEndpoint, BackendPolicySet,
-    ExtensionName, Frame, FrameBody, LaneName, ModelName, MutateBackendConfiguration, Operation,
-    OperationKind, OrderRejected, RejectionReason, Reply as AgentReply, RequestUnimplemented,
-    RetireAgent, RetirementReason, RouteThroughAgent, SetBackendPolicy, SpawnAgent, ThinkingLevel,
-    UnimplementedReason, WirePath,
+    EffectEmitted, EffectOutcome, ExtensionName, Frame, FrameBody, LaneName, ModelName,
+    MutateBackendConfiguration, Operation, OperationKind, OrderRejected, RejectionReason,
+    Reply as AgentReply, RequestUnimplemented, RetireAgent, RetirementReason, RouteThroughAgent,
+    SetBackendPolicy, SpawnAgent, ThinkingLevel, UnimplementedReason, WirePath,
 };
+use nota_next::{NotaDecode, NotaEncode, NotaSource};
 use signal_frame::{
     ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply as FrameReply, RequestPayload,
     SessionEpoch, SignalOperationHeads, SubReply,
@@ -96,7 +96,7 @@ where
 }
 
 #[test]
-fn owner_agent_operations_round_trip_through_length_prefixed_frames() {
+fn meta_agent_operations_round_trip_through_length_prefixed_frames() {
     let operations = vec![
         Operation::SpawnAgent(SpawnAgent {
             agent: agent(),
@@ -105,7 +105,7 @@ fn owner_agent_operations_round_trip_through_length_prefixed_frames() {
         }),
         Operation::RetireAgent(RetireAgent {
             agent: agent(),
-            reason: RetirementReason::OwnerRequested,
+            reason: RetirementReason::MetaRequested,
         }),
         Operation::SetBackendPolicy(SetBackendPolicy {
             lane: lane(),
@@ -127,7 +127,7 @@ fn owner_agent_operations_round_trip_through_length_prefixed_frames() {
 }
 
 #[test]
-fn owner_agent_replies_round_trip_through_length_prefixed_frames() {
+fn meta_agent_replies_round_trip_through_length_prefixed_frames() {
     let replies = vec![
         AgentReply::AgentSpawned(AgentSpawned {
             agent: agent(),
@@ -160,7 +160,7 @@ fn owner_agent_replies_round_trip_through_length_prefixed_frames() {
 }
 
 #[test]
-fn owner_agent_operation_kind_is_generated_by_macro() {
+fn meta_agent_operation_kind_is_generated_by_macro() {
     let cases = vec![
         (
             Operation::SpawnAgent(SpawnAgent {
@@ -173,7 +173,7 @@ fn owner_agent_operation_kind_is_generated_by_macro() {
         (
             Operation::RetireAgent(RetireAgent {
                 agent: agent(),
-                reason: RetirementReason::OwnerRequested,
+                reason: RetirementReason::MetaRequested,
             }),
             OperationKind::RetireAgent,
         ),
@@ -206,7 +206,7 @@ fn owner_agent_operation_kind_is_generated_by_macro() {
 }
 
 #[test]
-fn owner_agent_domain_operations_are_contract_local_heads() {
+fn meta_agent_domain_operations_are_contract_local_heads() {
     for expected in [
         "SpawnAgent",
         "RetireAgent",
@@ -219,7 +219,7 @@ fn owner_agent_domain_operations_are_contract_local_heads() {
 }
 
 #[test]
-fn owner_agent_nota_text_shape_stays_canonical() {
+fn meta_agent_nota_text_shape_stays_canonical() {
     round_trip_nota(
         Operation::SpawnAgent(SpawnAgent {
             agent: agent(),
@@ -231,9 +231,9 @@ fn owner_agent_nota_text_shape_stays_canonical() {
     round_trip_nota(
         Operation::RetireAgent(RetireAgent {
             agent: agent(),
-            reason: RetirementReason::OwnerRequested,
+            reason: RetirementReason::MetaRequested,
         }),
-        "(RetireAgent ([agent-alpha] OwnerRequested))",
+        "(RetireAgent ([agent-alpha] MetaRequested))",
     );
     round_trip_nota(
         Operation::SetBackendPolicy(SetBackendPolicy {
@@ -269,5 +269,12 @@ fn owner_agent_nota_text_shape_stays_canonical() {
             reason: UnimplementedReason::NotBuiltYet,
         }),
         "(RequestUnimplemented (NotBuiltYet))",
+    );
+    round_trip_nota(
+        EffectEmitted {
+            operation: OperationKind::SpawnAgent,
+            outcome: EffectOutcome::AgentSpawned,
+        },
+        "(SpawnAgent AgentSpawned)",
     );
 }

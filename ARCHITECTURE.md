@@ -1,10 +1,10 @@
-# owner-signal-agent — architecture
+# meta-signal-agent — architecture
 
-*OwnerSignal contract for privileged agent policy commands.*
+*Meta signal contract for privileged agent policy commands.*
 
 ## Role
 
-`owner-signal-agent` is the owner-only Signal surface for
+`meta-signal-agent` is the meta Signal surface for
 `agent`. It carries orchestrate-to-agent authority orders that spawn and
 retire agent runs, set lane default-backend policy, mutate backend
 configuration, and toggle per-lane routing through the new agent front door.
@@ -20,7 +20,7 @@ This repo implements bead `primary-gvgj.2` from the agent-component wave in
 
 ## Boundary
 
-This crate owns the typed wire vocabulary for owner-only policy. It does not
+This crate owns the typed wire vocabulary for meta policy. It does not
 own daemon actors, backend process supervision, redb tables, socket listeners,
 routing decisions, or lowering to Sema effects. Runtime interpretation belongs
 in `agent`.
@@ -31,7 +31,7 @@ The crate declares one `signal_channel!` at the crate root:
 
 ```rust
 signal_channel! {
-    channel Owner {
+    channel MetaAgent {
         operation SpawnAgent(SpawnAgent),
         operation RetireAgent(RetireAgent),
         operation SetBackendPolicy(SetBackendPolicy),
@@ -63,9 +63,9 @@ naming forbids the abbreviated `Config` form.
 
 ## Invariants
 
-- Owner-only mutating authority enters through this crate, not the ordinary
+- Meta mutating authority enters through this crate, not the ordinary
   agent contract.
-- Wire operations are contract-local owner verbs, not Sema class wrappers.
+- Wire operations are contract-local meta verbs, not Sema class wrappers.
 - Wire enums are closed. There is no `Unknown` escape hatch.
 - Shared nouns remain compatible with the ordinary contract.
 - Round-trip tests cover rkyv frame encoding and NOTA text encoding.
@@ -75,7 +75,7 @@ naming forbids the abbreviated `Config` form.
 ## Code map
 
 ```text
-src/lib.rs              — owner request/reply records and signal_channel! invocation
-examples/canonical.nota — canonical NOTA examples for public owner values
+src/lib.rs              — meta request/reply records and signal_channel! invocation
+examples/canonical.nota — canonical NOTA examples for public meta values
 tests/round_trip.rs     — rkyv frame, NOTA, and operation-kind witnesses
 ```

@@ -1,14 +1,13 @@
-//! OwnerSignal contract for privileged `agent` policy commands.
+//! Meta signal contract for privileged `agent` policy commands.
 //!
 //! Ordinary router-facing agent traffic belongs in `signal-agent`.
-//! This crate carries owner-only orders for spawning and retiring agents,
+//! This crate carries meta orders for spawning and retiring agents,
 //! lane backend policy, backend configuration, and staged routing through
 //! the agent front door.
 
 use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use signal_frame::signal_channel;
-use signal_sema::SemaObservation;
 
 pub use signal_frame::{
     ExchangeFrameBody as FrameExchangeFrameBody, HandshakeReply, HandshakeRequest, ProtocolVersion,
@@ -204,7 +203,7 @@ pub enum BackendEndpoint {
 )]
 pub enum BackendQuarantineReason {
     HealthCheckFailed,
-    OwnerDisabled,
+    MetaDisabled,
     BackendUnavailable,
     UnsafeConfiguration,
 }
@@ -259,7 +258,7 @@ pub struct SpawnAgent {
     Hash,
 )]
 pub enum RetirementReason {
-    OwnerRequested,
+    MetaRequested,
     LaneRetired,
     BackendUnavailable,
     Superseded,
@@ -393,7 +392,7 @@ pub struct RequestUnimplemented {
 }
 
 signal_channel! {
-    channel Owner {
+    channel MetaAgent {
         operation SpawnAgent(SpawnAgent),
         operation RetireAgent(RetireAgent),
         operation SetBackendPolicy(SetBackendPolicy),
@@ -424,10 +423,34 @@ pub struct OperationReceived {
 }
 
 #[derive(
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+)]
+pub enum EffectOutcome {
+    AgentSpawned,
+    AgentRetired,
+    BackendPolicySet,
+    BackendConfigurationMutated,
+    AgentRouteSet,
+    Rejected,
+    NoChange,
+}
+
+#[derive(
     Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
 )]
 pub struct EffectEmitted {
-    pub observation: SemaObservation,
+    pub operation: OperationKind,
+    pub outcome: EffectOutcome,
 }
 
 impl From<SpawnAgent> for Operation {

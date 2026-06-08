@@ -1,6 +1,6 @@
-# skills — owner-signal-agent
+# skills — meta-signal-agent
 
-Read this before editing the owner-only agent contract.
+Read this before editing the meta agent contract.
 
 ## Required context
 
@@ -15,7 +15,7 @@ Read this before editing the owner-only agent contract.
 
 ## Boundary
 
-This crate owns privileged owner-to-agent policy vocabulary. It has no runtime,
+This crate owns privileged meta-to-agent policy vocabulary. It has no runtime,
 no actors, no sockets, no storage, and no backend process logic.
 
 ## Invariants

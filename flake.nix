@@ -1,5 +1,5 @@
 {
-  description = "OwnerSignal contract for privileged agent policy commands.";
+  description = "meta-signal-agent - meta signal contract for privileged agent policy commands";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -79,7 +79,7 @@
         };
 
         devShells.default = pkgs.mkShell {
-          name = "owner-signal-agent";
+          name = "meta-signal-agent";
           packages = [
             pkgs.jujutsu
             pkgs.pkg-config

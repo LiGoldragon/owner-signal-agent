@@ -1,6 +1,6 @@
-# INTENT — owner-signal-agent
+# INTENT — meta-signal-agent
 
-*The owner-only wire contract for privileged `agent` policy. Defines the
+*The meta wire contract for privileged `agent` policy. Defines the
 typed request/reply channel that `orchestrate` uses to spawn and retire
 agent runs, set lane default-backend policy, mutate backend configuration,
 and toggle per-lane routing through the agent front door.
@@ -8,26 +8,26 @@ Companion to `ARCHITECTURE.md` and `Cargo.toml`. Maintenance: `primary/skills/re
 
 ## Repo-scope only
 
-This file carries only the intent that is FOR this owner-only `owner-signal-agent`
+This file carries only the intent that is FOR this meta `meta-signal-agent`
 contract. Workspace-shape intent stays in the primary workspace `primary/INTENT.md`.
 Component daemon intent stays in `agent/INTENT.md`. The ordinary router-facing
 contract stays in `signal-agent/INTENT.md`.
 
 ## Why this repo exists
 
-`owner-signal-agent` is the **owner-only authority contract** for the `agent`
+`meta-signal-agent` is the **meta authority contract** for the `agent`
 component. It carries orchestrate-to-agent authority orders. Ordinary
 router-facing operations stay in `signal-agent`; runtime actors, backend process
 supervision, sockets, redb tables, and routing decisions live in `agent`.
 
-The three-repo split is not bureaucracy: owner-only operations live in this
+The three-repo split is not bureaucracy: meta operations live in this
 distinct repo so a security-sensitive edit is obvious from which repo it lands
 in, and clients that do not need owner authority do not depend on it at all
 (per `primary/skills/component-triad.md` §"Why the contract is a separate repo").
 
 ## The channel shape
 
-The owner channel (`signal_channel! { channel Owner { ... } }`) carries:
+The meta channel (`signal_channel! { channel MetaAgent { ... } }`) carries:
 
 - **Requests:** `SpawnAgent`, `RetireAgent`, `SetBackendPolicy`,
   `MutateBackendConfiguration`, `RouteThroughAgent`
@@ -43,9 +43,9 @@ model, thinking level, and extension set.
 
 ## Constraints
 
-- Owner-only mutating authority enters through this crate, not the ordinary
+- Meta mutating authority enters through this crate, not the ordinary
   `signal-agent` contract.
-- Wire operations are contract-local owner verbs, not Sema class wrappers. There
+- Wire operations are contract-local meta verbs, not Sema class wrappers. There
   is no public `Mutate` / `Match` tag on the wire.
 - Wire enums are closed. No `Unknown` escape hatch.
 - Every identifier is spelled as a full English word —
