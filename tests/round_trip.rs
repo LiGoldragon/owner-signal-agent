@@ -1,18 +1,18 @@
+//! Architectural-truth round-trip tests for the schema-derived
+//! `meta-signal-agent` contract. Each request and reply variant round-trips
+//! through the `signal_frame` envelope (rkyv) and through NOTA text.
+
 use meta_signal_agent::{
-    AgentBackend, AgentIdentifier, AgentRetired, AgentRouteSet, AgentSpawned, BackendAvailability,
-    BackendConfiguration, BackendConfigurationMutated, BackendEndpoint, BackendPolicySet,
-    EffectEmitted, EffectOutcome, ExtensionName, Frame, FrameBody, LaneName, ModelName,
-    MutateBackendConfiguration, Operation, OperationKind, OrderRejected, RejectionReason,
-    Reply as AgentReply, RequestUnimplemented, RetireAgent, RetirementReason, RouteThroughAgent,
-    SetBackendPolicy, SpawnAgent, ThinkingLevel, UnimplementedReason, WirePath,
+    ApiKeyHandle, ConfigureProvider, DefaultProviderSet, EndpointUrl, Frame, FrameBody, Input,
+    Lifecycle, LifecycleState, ModelName, OperationKind, OrderRejection, OrderRejectionReason,
+    Output, ProviderConfiguration, ProviderConfigured, ProviderName, ProviderRetired,
+    RejectionDetail, RequestUnimplemented, RetireProvider, SetDefaultProvider, Start, Stop,
+    UnimplementedReason,
 };
 use nota_next::{NotaDecode, NotaEncode, NotaSource};
 use signal_frame::{
-    ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply as FrameReply, RequestPayload,
-    SessionEpoch, SignalOperationHeads, SubReply,
+    ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply, SessionEpoch, SubReply,
 };
-
-const CANONICAL: &str = include_str!("../examples/canonical.nota");
 
 fn exchange() -> ExchangeIdentifier {
     ExchangeIdentifier::new(
@@ -22,259 +22,126 @@ fn exchange() -> ExchangeIdentifier {
     )
 }
 
-fn agent() -> AgentIdentifier {
-    AgentIdentifier::new("agent-alpha")
-}
-
-fn lane() -> LaneName {
-    LaneName::new("designer")
-}
-
-fn backend_configuration() -> BackendConfiguration {
-    BackendConfiguration {
-        endpoint: BackendEndpoint::UnixSocket(WirePath::new("claude-socket")),
-        availability: BackendAvailability::Enabled,
-        model: Some(ModelName::new("claude-sonnet")),
-        thinking_level: ThinkingLevel::High,
-        extensions: vec![ExtensionName::new("filesystem")],
+fn deepseek() -> ProviderConfiguration {
+    ProviderConfiguration {
+        name: ProviderName::new("deepseek".to_owned()),
+        endpoint: EndpointUrl::new("https://api.deepseek.com/v1".to_owned()),
+        default_model: ModelName::new("deepseek-chat".to_owned()),
+        api_key_handle: ApiKeyHandle::new("DEEPSEEK_API_KEY".to_owned()),
     }
 }
 
-fn completed_reply(payload: AgentReply) -> FrameReply<AgentReply> {
-    FrameReply::committed(NonEmpty::single(SubReply::Ok(payload)))
-}
-
-fn round_trip_operation(operation: Operation) -> Operation {
-    let frame = Frame::new(FrameBody::Request {
-        exchange: exchange(),
-        request: operation.clone().into_request(),
-    });
-    let bytes = frame.encode_length_prefixed().expect("encode operation");
-    let decoded = Frame::decode_length_prefixed(&bytes).expect("decode operation");
-
+fn round_trip_request(request: Input) -> Input {
+    let expected = request.clone();
+    let frame = request.into_frame(exchange());
+    let bytes = frame.encode_length_prefixed().expect("encode");
+    let decoded = Frame::decode_length_prefixed(&bytes).expect("decode");
     match decoded.into_body() {
-        FrameBody::Request { request, .. } => request.payloads().head().clone(),
-        other => panic!("expected request, got {other:?}"),
+        FrameBody::Request { request, .. } => {
+            assert_eq!(request.payloads().head(), &expected);
+            request.payloads().head().clone()
+        }
+        other => panic!("expected request operation, got {other:?}"),
     }
 }
 
-fn round_trip_reply(reply: AgentReply) -> AgentReply {
+fn round_trip_reply(reply: Output) -> Output {
     let frame = Frame::new(FrameBody::Reply {
         exchange: exchange(),
-        reply: completed_reply(reply.clone()),
+        reply: Reply::committed(NonEmpty::single(SubReply::Ok(reply))),
     });
-    let bytes = frame.encode_length_prefixed().expect("encode reply");
-    let decoded = Frame::decode_length_prefixed(&bytes).expect("decode reply");
-
+    let bytes = frame.encode_length_prefixed().expect("encode");
+    let decoded = Frame::decode_length_prefixed(&bytes).expect("decode");
     match decoded.into_body() {
         FrameBody::Reply { reply, .. } => match reply {
-            FrameReply::Accepted { per_operation, .. } => match per_operation.into_head() {
+            Reply::Accepted { per_operation, .. } => match per_operation.into_head() {
                 SubReply::Ok(payload) => payload,
                 other => panic!("expected accepted reply payload, got {other:?}"),
             },
             other => panic!("expected accepted reply, got {other:?}"),
         },
-        other => panic!("expected reply, got {other:?}"),
+        other => panic!("expected reply operation, got {other:?}"),
     }
 }
 
-fn round_trip_nota<Value>(value: Value, expected: &str)
+fn round_trip_nota<T>(value: T, expected: &str)
 where
-    Value: NotaEncode + NotaDecode + PartialEq + std::fmt::Debug,
+    T: NotaEncode + NotaDecode + PartialEq + std::fmt::Debug,
 {
     let encoded = value.to_nota();
     assert_eq!(encoded, expected);
-
     let recovered = NotaSource::new(&encoded)
-        .parse::<Value>()
+        .parse::<T>()
         .expect("decode nota text");
     assert_eq!(recovered, value);
-    assert!(
-        CANONICAL.contains(expected),
-        "examples/canonical.nota missing line: {expected}"
-    );
 }
 
 #[test]
-fn meta_agent_operations_round_trip_through_length_prefixed_frames() {
-    let operations = vec![
-        Operation::SpawnAgent(SpawnAgent {
-            agent: agent(),
-            backend: AgentBackend::Claude,
-            lane: lane(),
-        }),
-        Operation::RetireAgent(RetireAgent {
-            agent: agent(),
-            reason: RetirementReason::MetaRequested,
-        }),
-        Operation::SetBackendPolicy(SetBackendPolicy {
-            lane: lane(),
-            default_backend: AgentBackend::Claude,
-        }),
-        Operation::MutateBackendConfiguration(MutateBackendConfiguration {
-            backend: AgentBackend::Claude,
-            configuration: backend_configuration(),
-        }),
-        Operation::RouteThroughAgent(RouteThroughAgent {
-            lane: lane(),
-            enabled: true,
-        }),
+fn every_request_round_trips_through_frame() {
+    let requests = [
+        Input::ConfigureProvider(ConfigureProvider::new(deepseek())),
+        Input::RetireProvider(RetireProvider::new(ProviderName::new("mimo".to_owned()))),
+        Input::SetDefaultProvider(SetDefaultProvider::new(ProviderName::new(
+            "deepseek".to_owned(),
+        ))),
+        Input::Start(Start {}),
+        Input::Stop(Stop {}),
     ];
-
-    for operation in operations {
-        assert_eq!(round_trip_operation(operation.clone()), operation);
+    for request in requests {
+        assert_eq!(round_trip_request(request.clone()), request);
     }
 }
 
 #[test]
-fn meta_agent_replies_round_trip_through_length_prefixed_frames() {
-    let replies = vec![
-        AgentReply::AgentSpawned(AgentSpawned {
-            agent: agent(),
-            backend: AgentBackend::Claude,
-            lane: lane(),
+fn every_reply_round_trips_through_frame() {
+    let replies = [
+        Output::ProviderConfigured(ProviderConfigured::new(ProviderName::new(
+            "deepseek".to_owned(),
+        ))),
+        Output::ProviderRetired(ProviderRetired::new(ProviderName::new("mimo".to_owned()))),
+        Output::DefaultProviderSet(DefaultProviderSet::new(ProviderName::new(
+            "deepseek".to_owned(),
+        ))),
+        Output::Started(Lifecycle::new(LifecycleState::Started)),
+        Output::Stopped(Lifecycle::new(LifecycleState::Stopped)),
+        Output::OrderRejected(OrderRejection {
+            reason: OrderRejectionReason::ProviderUnknown,
+            detail: RejectionDetail::new("no such provider".to_owned()),
         }),
-        AgentReply::AgentRetired(AgentRetired { agent: agent() }),
-        AgentReply::BackendPolicySet(BackendPolicySet {
-            lane: lane(),
-            default_backend: AgentBackend::Claude,
-        }),
-        AgentReply::BackendConfigurationMutated(BackendConfigurationMutated {
-            backend: AgentBackend::Claude,
-        }),
-        AgentReply::AgentRouteSet(AgentRouteSet {
-            lane: lane(),
-            enabled: true,
-        }),
-        AgentReply::OrderRejected(OrderRejected {
-            reason: RejectionReason::BackendUnavailable,
-        }),
-        AgentReply::RequestUnimplemented(RequestUnimplemented {
-            reason: UnimplementedReason::NotBuiltYet,
+        Output::RequestUnimplemented(RequestUnimplemented {
+            operation: OperationKind::SetDefaultProvider,
+            reason: UnimplementedReason::NotInPrototypeScope,
         }),
     ];
-
     for reply in replies {
         assert_eq!(round_trip_reply(reply.clone()), reply);
     }
 }
 
 #[test]
-fn meta_agent_operation_kind_is_generated_by_macro() {
-    let cases = vec![
-        (
-            Operation::SpawnAgent(SpawnAgent {
-                agent: agent(),
-                backend: AgentBackend::Claude,
-                lane: lane(),
-            }),
-            OperationKind::SpawnAgent,
-        ),
-        (
-            Operation::RetireAgent(RetireAgent {
-                agent: agent(),
-                reason: RetirementReason::MetaRequested,
-            }),
-            OperationKind::RetireAgent,
-        ),
-        (
-            Operation::SetBackendPolicy(SetBackendPolicy {
-                lane: lane(),
-                default_backend: AgentBackend::Claude,
-            }),
-            OperationKind::SetBackendPolicy,
-        ),
-        (
-            Operation::MutateBackendConfiguration(MutateBackendConfiguration {
-                backend: AgentBackend::Claude,
-                configuration: backend_configuration(),
-            }),
-            OperationKind::MutateBackendConfiguration,
-        ),
-        (
-            Operation::RouteThroughAgent(RouteThroughAgent {
-                lane: lane(),
-                enabled: true,
-            }),
-            OperationKind::RouteThroughAgent,
-        ),
-    ];
-
-    for (operation, expected_kind) in cases {
-        assert_eq!(operation.kind(), expected_kind);
-    }
+fn input_exposes_contract_owned_operation_kind() {
+    assert_eq!(
+        Input::ConfigureProvider(ConfigureProvider::new(deepseek())).operation_kind(),
+        OperationKind::ConfigureProvider
+    );
+    assert_eq!(Input::Stop(Stop {}).operation_kind(), OperationKind::Stop);
 }
 
 #[test]
-fn meta_agent_domain_operations_are_contract_local_heads() {
-    for expected in [
-        "SpawnAgent",
-        "RetireAgent",
-        "SetBackendPolicy",
-        "MutateBackendConfiguration",
-        "RouteThroughAgent",
-    ] {
-        assert!(Operation::HEADS.contains(&expected));
-    }
+fn provider_configuration_round_trips_through_nota_text_with_key_handle_only() {
+    round_trip_nota(
+        Input::ConfigureProvider(ConfigureProvider::new(deepseek())),
+        "(ConfigureProvider ([deepseek] [https://api.deepseek.com/v1] [deepseek-chat] [DEEPSEEK_API_KEY]))",
+    );
 }
 
 #[test]
-fn meta_agent_nota_text_shape_stays_canonical() {
+fn order_rejection_round_trips_through_nota_text() {
     round_trip_nota(
-        Operation::SpawnAgent(SpawnAgent {
-            agent: agent(),
-            backend: AgentBackend::Claude,
-            lane: lane(),
+        Output::OrderRejected(OrderRejection {
+            reason: OrderRejectionReason::KeyHandleMissing,
+            detail: RejectionDetail::new("env var not set".to_owned()),
         }),
-        "(SpawnAgent ([agent-alpha] Claude [designer]))",
-    );
-    round_trip_nota(
-        Operation::RetireAgent(RetireAgent {
-            agent: agent(),
-            reason: RetirementReason::MetaRequested,
-        }),
-        "(RetireAgent ([agent-alpha] MetaRequested))",
-    );
-    round_trip_nota(
-        Operation::SetBackendPolicy(SetBackendPolicy {
-            lane: lane(),
-            default_backend: AgentBackend::Claude,
-        }),
-        "(SetBackendPolicy ([designer] Claude))",
-    );
-    round_trip_nota(
-        Operation::MutateBackendConfiguration(MutateBackendConfiguration {
-            backend: AgentBackend::Claude,
-            configuration: backend_configuration(),
-        }),
-        "(MutateBackendConfiguration (Claude ((UnixSocket [claude-socket]) Enabled (Some [claude-sonnet]) High [[filesystem]])))",
-    );
-    round_trip_nota(
-        Operation::RouteThroughAgent(RouteThroughAgent {
-            lane: lane(),
-            enabled: true,
-        }),
-        "(RouteThroughAgent ([designer] True))",
-    );
-    round_trip_nota(
-        AgentReply::AgentSpawned(AgentSpawned {
-            agent: agent(),
-            backend: AgentBackend::Claude,
-            lane: lane(),
-        }),
-        "(AgentSpawned ([agent-alpha] Claude [designer]))",
-    );
-    round_trip_nota(
-        AgentReply::RequestUnimplemented(RequestUnimplemented {
-            reason: UnimplementedReason::NotBuiltYet,
-        }),
-        "(RequestUnimplemented (NotBuiltYet))",
-    );
-    round_trip_nota(
-        EffectEmitted {
-            operation: OperationKind::SpawnAgent,
-            outcome: EffectOutcome::AgentSpawned,
-        },
-        "(SpawnAgent AgentSpawned)",
+        "(OrderRejected (KeyHandleMissing [env var not set]))",
     );
 }

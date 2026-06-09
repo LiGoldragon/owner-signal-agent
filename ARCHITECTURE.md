@@ -1,81 +1,83 @@
-# meta-signal-agent — architecture
+# meta-signal-agent — Architecture
 
-*Meta signal contract for privileged agent policy commands.*
+`meta-signal-agent` is the owner-only meta policy Signal contract for the
+`agent` LLM-call component — the security-sensitive door in the `agent` triad
+(`agent` runtime, `signal-agent` ordinary contract, `meta-signal-agent` meta
+policy contract). Mutating authority lives here, not in the ordinary contract.
 
-## Role
+It is a schema-derived `WireContract` crate: `schema/lib.schema` is the source
+of truth; `schema-rust-next`'s `ContractCrateBuild` emits the freshness-checked
+`src/schema/lib.rs`. No engine traits, runtime, actors, or `tokio`.
 
-`meta-signal-agent` is the meta Signal surface for
-`agent`. It carries orchestrate-to-agent authority orders that spawn and
-retire agent runs, set lane default-backend policy, mutate backend
-configuration, and toggle per-lane routing through the new agent front door.
+## Scope — provider configuration + lifecycle, not harness policy
 
-The ordinary router-facing contract lives in `signal-agent`. This crate carries
-local compatible definitions for the shared nouns that both contracts need:
-`AgentIdentifier`, `AgentBackend`, `LaneName`, and `BackendConfiguration`.
-Those nouns stay aligned until a shared surface or re-export decision lands.
+Per psyche intent (Spirit `f8k7`, `iucr`), `agent` makes provider HTTP API
+calls in an OpenAI-compatible style. This contract carries the owner orders that
+configure providers and drive the daemon's lifecycle. The earlier
+spawn-agent / retire-agent / backend-policy / route-toggle framing (an
+agent-harness shape) is discarded.
 
-This repo implements bead `primary-gvgj.2` from the agent-component wave in
-`reports/designer/309-design-agent-component-abstraction.md` and is sequenced by
-`reports/designer/310-meta-overhaul-booking-roadmap.md` §5 and §9.
+## The provider model is the load-bearing decision
 
-## Boundary
-
-This crate owns the typed wire vocabulary for meta policy. It does not
-own daemon actors, backend process supervision, redb tables, socket listeners,
-routing decisions, or lowering to Sema effects. Runtime interpretation belongs
-in `agent`.
+A provider is a **generic OpenAI-compatible API**: a `ProviderConfiguration`
+carries a `ProviderName`, an `EndpointUrl`, a default `ModelName`, and an
+`ApiKeyHandle`. The key handle is the *name of an environment variable* the
+daemon resolves at call time — the secret value never crosses this wire
+(`primary/skills/secrets.md`: an agent never sees a secret value). Adding
+DeepSeek, MiMo, Kimi, GLM, or MiniMax is a `ConfigureProvider` message, never a
+new variant or contract change.
 
 ## Contract surface
 
-The crate declares one `signal_channel!` at the crate root:
+- `ConfigureProvider(ConfigureProvider)` — add or update a provider
+  (endpoint + model + key handle). Reply: `ProviderConfigured(ProviderConfigured)`.
+- `RetireProvider(RetireProvider)` — remove a provider by name. Reply:
+  `ProviderRetired(ProviderRetired)`.
+- `SetDefaultProvider(SetDefaultProvider)` — set the provider used when a
+  `Call` names none. Reply: `DefaultProviderSet(DefaultProviderSet)`.
+- `Start(Start)` / `Stop(Stop)` — lifecycle. Reply: `Started(Lifecycle)` /
+  `Stopped(Lifecycle)`.
 
-```rust
-signal_channel! {
-    channel MetaAgent {
-        operation SpawnAgent(SpawnAgent),
-        operation RetireAgent(RetireAgent),
-        operation SetBackendPolicy(SetBackendPolicy),
-        operation MutateBackendConfiguration(MutateBackendConfiguration),
-        operation RouteThroughAgent(RouteThroughAgent),
-    }
-    reply Reply { ... }
-    observable { ... }
-}
-```
-
-The macro emits `Operation`, `OperationKind`, `Reply`, `Frame`, `FrameBody`,
-`Request`, `RequestBuilder`, observer stream types, and the NOTA codec for the
-public payloads.
+`OrderRejected(OrderRejection)` carries a closed `OrderRejectionReason`;
+`RequestUnimplemented` is the skeleton-honesty reply.
 
 ## Records
 
-The local compatibility nouns are deliberately small:
-
-- `AgentIdentifier` names one agent run.
-- `AgentBackend` is the closed backend set: `Claude`, `Codex`, `Gemini`, `Pi`,
-  `OpenCode`, `Fixture`.
-- `LaneName` names the lane whose default backend or route is changing.
-- `BackendConfiguration` carries the backend endpoint, availability, optional
-  model, thinking level, and extension set.
-
-`MutateBackendConfiguration` uses the full English word because workspace
-naming forbids the abbreviated `Config` form.
+- `ProviderConfiguration` — the "add a provider = configuration" record:
+  `name`, `endpoint`, `default_model`, `api_key_handle`. No per-provider type.
+- `ProviderName`, `EndpointUrl`, `ModelName`, `ApiKeyHandle` — string newtypes.
+- `Lifecycle` over a closed `LifecycleState` (`Started` / `Stopped`).
+- `OrderRejectionReason` (closed): `ProviderUnknown`,
+  `ProviderAlreadyConfigured`, `EndpointInvalid`, `KeyHandleMissing`,
+  `PolicyStoreUnavailable`.
 
 ## Invariants
 
-- Meta mutating authority enters through this crate, not the ordinary
-  agent contract.
+- Meta mutating authority enters through this crate, not the ordinary contract.
+- The secret value never appears: only the key HANDLE crosses the wire.
 - Wire operations are contract-local meta verbs, not Sema class wrappers.
-- Wire enums are closed. There is no `Unknown` escape hatch.
-- Shared nouns remain compatible with the ordinary contract.
-- Round-trip tests cover rkyv frame encoding and NOTA text encoding.
+- Wire enums are closed. No `Unknown` escape hatch. No concrete provider name
+  is a variant.
+- Identifiers are full English words.
 - Contract code contains no Kameo, Tokio, redb, sockets, process spawning, or
   daemon policy logic.
+- Every operation and reply has an rkyv and NOTA round-trip witness.
 
 ## Code map
 
 ```text
-src/lib.rs              — meta request/reply records and signal_channel! invocation
-examples/canonical.nota — canonical NOTA examples for public meta values
-tests/round_trip.rs     — rkyv frame, NOTA, and operation-kind witnesses
+schema/lib.schema        the source of truth (schema-rust-next grammar)
+src/schema/lib.rs        freshness-checked schema-rust-next artifact (generated)
+src/lib.rs               module entry + hand-written methods on emitted nouns
+build.rs                 ContractCrateBuild -> WireContract emission
+examples/canonical.nota  one canonical NOTA example per operation/reply
+tests/round_trip.rs      rkyv frame, NOTA, and operation-kind witnesses
 ```
+
+## See also
+
+- `/home/li/primary/skills/component-triad.md` §"Two authority tiers".
+- `/home/li/primary/skills/contract-repo.md`
+- `/home/li/primary/skills/secrets.md` — key handles, never secret values.
+- `../agent/ARCHITECTURE.md` — daemon-side provider registry and call path.
+- `../signal-agent/ARCHITECTURE.md` — the ordinary call contract.

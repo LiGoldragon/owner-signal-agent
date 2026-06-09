@@ -1,8 +1,32 @@
-(SpawnAgent ([agent-alpha] Claude [designer]))
-(RetireAgent ([agent-alpha] MetaRequested))
-(SetBackendPolicy ([designer] Claude))
-(MutateBackendConfiguration (Claude ((UnixSocket [claude-socket]) Enabled (Some [claude-sonnet]) High [[filesystem]])))
-(RouteThroughAgent ([designer] True))
-(AgentSpawned ([agent-alpha] Claude [designer]))
-(RequestUnimplemented (NotBuiltYet))
-(SpawnAgent AgentSpawned)
+;; Canonical NOTA examples for meta-signal-agent — the owner-only meta policy
+;; contract for the `agent` LLM-call component.
+;;
+;; One example per request and reply variant, in the exact schema-derived wire
+;; form (schema/lib.schema -> schema-rust-next -> generated Input / Output).
+;; String newtypes bracket-wrap. Mutating authority (provider configuration,
+;; lifecycle) lives here, never in the ordinary signal-agent contract.
+;;
+;; A provider = endpoint URL + default model + API-key HANDLE (an env-var name
+;; the daemon resolves; the secret value never crosses the wire). Adding a
+;; provider is a ConfigureProvider message — never a contract change. DeepSeek
+;; and MiMo are the first two configured providers.
+
+;; Requests
+;;   ProviderConfiguration = (name  endpoint  default_model  api_key_handle)
+
+(ConfigureProvider ([deepseek] [https://api.deepseek.com/v1] [deepseek-chat] [DEEPSEEK_API_KEY]))
+(ConfigureProvider ([mimo] [https://api.mimo.example/v1] [mimo-7b] [MIMO_API_KEY]))
+(RetireProvider [mimo])
+(SetDefaultProvider [deepseek])
+(Start ())
+(Stop ())
+
+;; Replies
+
+(ProviderConfigured [deepseek])
+(ProviderRetired [mimo])
+(DefaultProviderSet [deepseek])
+(Started Started)
+(Stopped Stopped)
+(OrderRejected (ProviderUnknown [no such provider in the registry]))
+(RequestUnimplemented (SetDefaultProvider NotInPrototypeScope))

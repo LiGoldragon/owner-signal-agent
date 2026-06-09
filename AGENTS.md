@@ -1,19 +1,24 @@
 # meta-signal-agent agent notes
 
-Read `~/primary/AGENTS.md` first. This repository is the meta typed
-contract for privileged `agent` policy commands. Keep daemon behavior,
-actors, storage, process spawning, backend routing logic, and text parsing out
-of this crate.
+Read `~/primary/AGENTS.md` first, then this repo's `INTENT.md` and
+`ARCHITECTURE.md`. This repository is the owner-only meta wire contract for the
+`agent` LLM-call component: provider configuration and lifecycle. Keep daemon
+behaviour, actors, storage, process spawning, the provider registry, and text
+parsing out of this crate.
+
+`agent` makes OpenAI-compatible provider HTTP API calls; it is NOT an agent
+harness (psyche Spirit `iucr`, `f8k7`). A provider is a generic
+OpenAI-compatible API (endpoint + model + key handle); adding one is a
+`ConfigureProvider` message, never a contract change. The key handle is an
+env-var name — the secret value never crosses the wire.
 
 Before changing the contract surface, read:
 
-- `~/primary/skills/component-triad.md`
+- `~/primary/skills/component-triad.md` §"Two authority tiers"
 - `~/primary/skills/contract-repo.md`
+- `~/primary/skills/secrets.md`
 - `~/primary/skills/naming.md`
-- `~/primary/reports/designer/309-design-agent-component-abstraction.md`
-- `~/primary/reports/designer/310-meta-overhaul-booking-roadmap.md` §5 and §9
 
-The ordinary `signal-agent` contract exists beside this meta contract. Shared
-nouns in this crate (`AgentIdentifier`, `AgentBackend`, `LaneName`, and
-`BackendConfiguration`) stay compatible with that ordinary surface; factor them
-to a shared meta/ordinary surface when the contract shape calls for it.
+Edit `schema/lib.schema` and regenerate
+(`META_SIGNAL_AGENT_UPDATE_SCHEMA_ARTIFACTS=1 cargo build`); never hand-edit
+`src/schema/lib.rs`.
