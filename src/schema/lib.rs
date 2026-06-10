@@ -16,27 +16,27 @@ pub use nota_next::{NotaDecode, NotaDecodeError, NotaEncode, NotaSource};
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ProviderName(pub String);
+pub struct ProviderName(String);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct EndpointUrl(pub String);
+pub struct EndpointUrl(String);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ModelName(pub String);
+pub struct ModelName(String);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ApiKeyHandle(pub String);
+pub struct ApiKeyHandle(String);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct RejectionDetail(pub String);
+pub struct RejectionDetail(String);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
@@ -51,17 +51,17 @@ pub struct ProviderConfiguration {
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ConfigureProvider(pub ProviderConfiguration);
+pub struct ConfigureProvider(ProviderConfiguration);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct RetireProvider(pub ProviderName);
+pub struct RetireProvider(ProviderName);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct SetDefaultProvider(pub ProviderName);
+pub struct SetDefaultProvider(ProviderName);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
@@ -76,17 +76,17 @@ pub struct Stop {}
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ProviderConfigured(pub ProviderName);
+pub struct ProviderConfigured(ProviderName);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ProviderRetired(pub ProviderName);
+pub struct ProviderRetired(ProviderName);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct DefaultProviderSet(pub ProviderName);
+pub struct DefaultProviderSet(ProviderName);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
@@ -108,7 +108,7 @@ pub enum LifecycleState {
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Lifecycle(pub LifecycleState);
+pub struct Lifecycle(LifecycleState);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
@@ -208,8 +208,8 @@ pub enum Output {
 
 #[rustfmt::skip]
 impl ProviderName {
-    pub fn new(payload: String) -> Self {
-        Self(payload)
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
     }
     pub fn payload(&self) -> &String {
         &self.0
@@ -227,8 +227,8 @@ impl From<String> for ProviderName {
 
 #[rustfmt::skip]
 impl EndpointUrl {
-    pub fn new(payload: String) -> Self {
-        Self(payload)
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
     }
     pub fn payload(&self) -> &String {
         &self.0
@@ -246,8 +246,8 @@ impl From<String> for EndpointUrl {
 
 #[rustfmt::skip]
 impl ModelName {
-    pub fn new(payload: String) -> Self {
-        Self(payload)
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
     }
     pub fn payload(&self) -> &String {
         &self.0
@@ -265,8 +265,8 @@ impl From<String> for ModelName {
 
 #[rustfmt::skip]
 impl ApiKeyHandle {
-    pub fn new(payload: String) -> Self {
-        Self(payload)
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
     }
     pub fn payload(&self) -> &String {
         &self.0
@@ -284,8 +284,8 @@ impl From<String> for ApiKeyHandle {
 
 #[rustfmt::skip]
 impl RejectionDetail {
-    pub fn new(payload: String) -> Self {
-        Self(payload)
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
     }
     pub fn payload(&self) -> &String {
         &self.0

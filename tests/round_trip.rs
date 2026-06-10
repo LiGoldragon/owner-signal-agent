@@ -131,7 +131,7 @@ fn input_exposes_contract_owned_operation_kind() {
 fn provider_configuration_round_trips_through_nota_text_with_key_handle_only() {
     round_trip_nota(
         Input::ConfigureProvider(ConfigureProvider::new(deepseek())),
-        "(ConfigureProvider ([deepseek] [https://api.deepseek.com/v1] [deepseek-chat] [DEEPSEEK_API_KEY]))",
+        "(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-chat DEEPSEEK_API_KEY))",
     );
 }
 
