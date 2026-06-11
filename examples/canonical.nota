@@ -3,8 +3,9 @@
 ;;
 ;; One example per request and reply variant, in the exact schema-derived wire
 ;; form (schema/lib.schema -> schema-rust-next -> generated Input / Output).
-;; String newtypes bracket-wrap. Mutating authority (provider configuration,
-;; lifecycle) lives here, never in the ordinary signal-agent contract.
+;; String delimiters are only for strings that need them. Mutating authority
+;; (provider configuration, lifecycle) lives here, never in the ordinary
+;; signal-agent contract.
 ;;
 ;; A provider = endpoint URL + default model + API-key HANDLE (an env-var name
 ;; the daemon resolves; the secret value never crosses the wire). Adding a
@@ -14,18 +15,18 @@
 ;; Requests
 ;;   ProviderConfiguration = (name  endpoint  default_model  api_key_handle)
 
-(ConfigureProvider ([deepseek] [https://api.deepseek.com/v1] [deepseek-chat] [DEEPSEEK_API_KEY]))
-(ConfigureProvider ([mimo] [https://api.mimo.example/v1] [mimo-7b] [MIMO_API_KEY]))
-(RetireProvider [mimo])
-(SetDefaultProvider [deepseek])
+(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-v4-flash DEEPSEEK_API_KEY))
+(ConfigureProvider (mimo https://api.mimo.example/v1 mimo-7b MIMO_API_KEY))
+(RetireProvider mimo)
+(SetDefaultProvider deepseek)
 (Start ())
 (Stop ())
 
 ;; Replies
 
-(ProviderConfigured [deepseek])
-(ProviderRetired [mimo])
-(DefaultProviderSet [deepseek])
+(ProviderConfigured deepseek)
+(ProviderRetired mimo)
+(DefaultProviderSet deepseek)
 (Started Started)
 (Stopped Stopped)
 (OrderRejected (ProviderUnknown [no such provider in the registry]))

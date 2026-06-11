@@ -26,7 +26,7 @@ fn deepseek() -> ProviderConfiguration {
     ProviderConfiguration {
         name: ProviderName::new("deepseek".to_owned()),
         endpoint: EndpointUrl::new("https://api.deepseek.com/v1".to_owned()),
-        default_model: ModelName::new("deepseek-chat".to_owned()),
+        default_model: ModelName::new("deepseek-v4-flash".to_owned()),
         api_key_handle: ApiKeyHandle::new("DEEPSEEK_API_KEY".to_owned()),
     }
 }
@@ -131,7 +131,7 @@ fn input_exposes_contract_owned_operation_kind() {
 fn provider_configuration_round_trips_through_nota_text_with_key_handle_only() {
     round_trip_nota(
         Input::ConfigureProvider(ConfigureProvider::new(deepseek())),
-        "(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-chat DEEPSEEK_API_KEY))",
+        "(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-v4-flash DEEPSEEK_API_KEY))",
     );
 }
 
