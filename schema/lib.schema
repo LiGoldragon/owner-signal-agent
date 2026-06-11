@@ -8,8 +8,8 @@
 ;; or the gated-Spirit owner) configures providers and drives lifecycle through this contract.
 ;;
 ;; PROVIDER MODEL (psyche f8k7): a provider is a GENERIC OpenAI-compatible API — endpoint URL,
-;; default model, and an API-key HANDLE (an env-var name the daemon resolves, never the secret
-;; value itself). Adding DeepSeek, MiMo, Kimi, GLM, or MiniMax is a ConfigureProvider message,
+;; default model, and a typed secret-source reference the daemon resolves, never the secret value
+;; itself. Adding DeepSeek, MiMo, Kimi, GLM, or MiniMax is a ConfigureProvider message,
 ;; never a contract change. DeepSeek and MiMo are the first two configured providers.
 
 {}
@@ -30,19 +30,26 @@
   ProviderName { value String }
   EndpointUrl { value String }
   ModelName { value String }
-  ;; The API-key HANDLE: the name of an environment variable the daemon resolves
-  ;; at call time. The secret value never crosses this wire — the agent never
-  ;; sees a secret value (primary/skills/secrets.md).
-  ApiKeyHandle { value String }
+  EnvironmentVariable { value String }
+  GopassPath { value String }
+  SecretFilePath { value String }
   RejectionDetail { value String }
 
-  ;; A provider is endpoint + default model + key handle. This IS the
+  ;; The API-key source reference. The secret value never crosses this wire; the
+  ;; agent daemon resolves the source and holds the secret only for one provider
+  ;; call. Gopass is a first-class backend, not a caller-side convention.
+  EnvironmentSecret { variable EnvironmentVariable }
+  GopassSecret { path GopassPath }
+  FileSecret { path SecretFilePath }
+  SecretSource [(Environment EnvironmentSecret) (Gopass GopassSecret) (File FileSecret)]
+
+  ;; A provider is endpoint + default model + secret source. This IS the
   ;; "add a provider = pure configuration" record: no per-provider type.
   ProviderConfiguration {
     name ProviderName
     endpoint EndpointUrl
     default_model ModelName
-    api_key_handle ApiKeyHandle
+    secret_source SecretSource
   }
 
   ConfigureProvider { configuration ProviderConfiguration }
@@ -64,7 +71,7 @@
     ProviderUnknown
     ProviderAlreadyConfigured
     EndpointInvalid
-    KeyHandleMissing
+    SecretUnavailable
     PolicyStoreUnavailable
   ]
   OrderRejection { reason OrderRejectionReason detail RejectionDetail }

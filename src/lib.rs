@@ -6,9 +6,10 @@
 //!
 //! Provider model (psyche f8k7): a provider is a GENERIC OpenAI-compatible API —
 //! `ProviderConfiguration` carries an endpoint URL, a default model, and an
-//! API-key HANDLE (an environment-variable name the daemon resolves; the secret
-//! value never crosses this wire). Adding DeepSeek, MiMo, Kimi, GLM, or MiniMax
-//! is a `ConfigureProvider` message, never a contract change.
+//! API-key `SecretSource` reference (Environment, Gopass, or File) the daemon
+//! resolves; the secret value never crosses this wire. Adding DeepSeek, MiMo,
+//! Kimi, GLM, or MiniMax is a `ConfigureProvider` message, never a contract
+//! change.
 //!
 //! `schema/lib.schema` is the source of truth. The checked-in `src/schema/lib.rs`
 //! is a freshness-checked schema-rust-next artifact, not handwritten vocabulary.

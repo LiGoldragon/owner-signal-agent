@@ -3,11 +3,11 @@
 //! through the `signal_frame` envelope (rkyv) and through NOTA text.
 
 use meta_signal_agent::{
-    ApiKeyHandle, ConfigureProvider, DefaultProviderSet, EndpointUrl, Frame, FrameBody, Input,
-    Lifecycle, LifecycleState, ModelName, OperationKind, OrderRejection, OrderRejectionReason,
-    Output, ProviderConfiguration, ProviderConfigured, ProviderName, ProviderRetired,
-    RejectionDetail, RequestUnimplemented, RetireProvider, SetDefaultProvider, Start, Stop,
-    UnimplementedReason,
+    ConfigureProvider, DefaultProviderSet, EndpointUrl, EnvironmentSecret, EnvironmentVariable,
+    Frame, FrameBody, Input, Lifecycle, LifecycleState, ModelName, OperationKind, OrderRejection,
+    OrderRejectionReason, Output, ProviderConfiguration, ProviderConfigured, ProviderName,
+    ProviderRetired, RejectionDetail, RequestUnimplemented, RetireProvider, SecretSource,
+    SetDefaultProvider, Start, Stop, UnimplementedReason,
 };
 use nota_next::{NotaDecode, NotaEncode, NotaSource};
 use signal_frame::{
@@ -27,7 +27,9 @@ fn deepseek() -> ProviderConfiguration {
         name: ProviderName::new("deepseek".to_owned()),
         endpoint: EndpointUrl::new("https://api.deepseek.com/v1".to_owned()),
         default_model: ModelName::new("deepseek-v4-flash".to_owned()),
-        api_key_handle: ApiKeyHandle::new("DEEPSEEK_API_KEY".to_owned()),
+        secret_source: SecretSource::Environment(EnvironmentSecret::new(EnvironmentVariable::new(
+            "DEEPSEEK_API_KEY".to_owned(),
+        ))),
     }
 }
 
@@ -128,10 +130,10 @@ fn input_exposes_contract_owned_operation_kind() {
 }
 
 #[test]
-fn provider_configuration_round_trips_through_nota_text_with_key_handle_only() {
+fn provider_configuration_round_trips_through_nota_text_with_secret_source_only() {
     round_trip_nota(
         Input::ConfigureProvider(ConfigureProvider::new(deepseek())),
-        "(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-v4-flash DEEPSEEK_API_KEY))",
+        "(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-v4-flash (Environment DEEPSEEK_API_KEY)))",
     );
 }
 
@@ -139,9 +141,9 @@ fn provider_configuration_round_trips_through_nota_text_with_key_handle_only() {
 fn order_rejection_round_trips_through_nota_text() {
     round_trip_nota(
         Output::OrderRejected(OrderRejection {
-            reason: OrderRejectionReason::KeyHandleMissing,
-            detail: RejectionDetail::new("env var not set".to_owned()),
+            reason: OrderRejectionReason::SecretUnavailable,
+            detail: RejectionDetail::new("secret source unavailable".to_owned()),
         }),
-        "(OrderRejected (KeyHandleMissing [env var not set]))",
+        "(OrderRejected (SecretUnavailable [secret source unavailable]))",
     );
 }

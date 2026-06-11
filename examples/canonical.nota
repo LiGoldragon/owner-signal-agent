@@ -7,16 +7,16 @@
 ;; (provider configuration, lifecycle) lives here, never in the ordinary
 ;; signal-agent contract.
 ;;
-;; A provider = endpoint URL + default model + API-key HANDLE (an env-var name
-;; the daemon resolves; the secret value never crosses the wire). Adding a
-;; provider is a ConfigureProvider message — never a contract change. DeepSeek
-;; and MiMo are the first two configured providers.
+;; A provider = endpoint URL + default model + secret-source reference the
+;; daemon resolves; the secret value never crosses the wire. Adding a provider
+;; is a ConfigureProvider message — never a contract change. DeepSeek and MiMo
+;; are the first two configured providers.
 
 ;; Requests
-;;   ProviderConfiguration = (name  endpoint  default_model  api_key_handle)
+;;   ProviderConfiguration = (name  endpoint  default_model  secret_source)
 
-(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-v4-flash DEEPSEEK_API_KEY))
-(ConfigureProvider (mimo https://api.mimo.example/v1 mimo-7b MIMO_API_KEY))
+(ConfigureProvider (deepseek https://api.deepseek.com/v1 deepseek-v4-flash (Gopass platform.deepseek.com/api-key)))
+(ConfigureProvider (mimo https://api.mimo.example/v1 mimo-7b (Environment MIMO_API_KEY)))
 (RetireProvider mimo)
 (SetDefaultProvider deepseek)
 (Start ())
@@ -29,5 +29,5 @@
 (DefaultProviderSet deepseek)
 (Started Started)
 (Stopped Stopped)
-(OrderRejected (ProviderUnknown [no such provider in the registry]))
+(OrderRejected (SecretUnavailable [secret source unavailable]))
 (RequestUnimplemented (SetDefaultProvider NotInPrototypeScope))

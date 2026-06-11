@@ -31,7 +31,17 @@ pub struct ModelName(String);
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ApiKeyHandle(String);
+pub struct EnvironmentVariable(String);
+
+#[rustfmt::skip]
+#[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct GopassPath(String);
+
+#[rustfmt::skip]
+#[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SecretFilePath(String);
 
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
@@ -41,11 +51,35 @@ pub struct RejectionDetail(String);
 #[rustfmt::skip]
 #[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct EnvironmentSecret(EnvironmentVariable);
+
+#[rustfmt::skip]
+#[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct GopassSecret(GopassPath);
+
+#[rustfmt::skip]
+#[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FileSecret(SecretFilePath);
+
+#[rustfmt::skip]
+#[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum SecretSource {
+    Environment(EnvironmentSecret),
+    Gopass(GopassSecret),
+    File(FileSecret),
+}
+
+#[rustfmt::skip]
+#[cfg_attr(feature = "nota-text", derive(nota_next::NotaDecode, nota_next::NotaEncode))]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ProviderConfiguration {
     pub name: ProviderName,
     pub endpoint: EndpointUrl,
     pub default_model: ModelName,
-    pub api_key_handle: ApiKeyHandle,
+    pub secret_source: SecretSource,
 }
 
 #[rustfmt::skip]
@@ -126,7 +160,7 @@ pub enum OrderRejectionReason {
     ProviderUnknown,
     ProviderAlreadyConfigured,
     EndpointInvalid,
-    KeyHandleMissing,
+    SecretUnavailable,
     PolicyStoreUnavailable,
 }
 
@@ -264,7 +298,7 @@ impl From<String> for ModelName {
 }
 
 #[rustfmt::skip]
-impl ApiKeyHandle {
+impl EnvironmentVariable {
     pub fn new(payload: impl Into<String>) -> Self {
         Self(payload.into())
     }
@@ -276,7 +310,45 @@ impl ApiKeyHandle {
     }
 }
 #[rustfmt::skip]
-impl From<String> for ApiKeyHandle {
+impl From<String> for EnvironmentVariable {
+    fn from(payload: String) -> Self {
+        Self::new(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl GopassPath {
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
+    }
+    pub fn payload(&self) -> &String {
+        &self.0
+    }
+    pub fn into_payload(self) -> String {
+        self.0
+    }
+}
+#[rustfmt::skip]
+impl From<String> for GopassPath {
+    fn from(payload: String) -> Self {
+        Self::new(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl SecretFilePath {
+    pub fn new(payload: impl Into<String>) -> Self {
+        Self(payload.into())
+    }
+    pub fn payload(&self) -> &String {
+        &self.0
+    }
+    pub fn into_payload(self) -> String {
+        self.0
+    }
+}
+#[rustfmt::skip]
+impl From<String> for SecretFilePath {
     fn from(payload: String) -> Self {
         Self::new(payload)
     }
@@ -297,6 +369,63 @@ impl RejectionDetail {
 #[rustfmt::skip]
 impl From<String> for RejectionDetail {
     fn from(payload: String) -> Self {
+        Self::new(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl EnvironmentSecret {
+    pub fn new(payload: EnvironmentVariable) -> Self {
+        Self(payload)
+    }
+    pub fn payload(&self) -> &EnvironmentVariable {
+        &self.0
+    }
+    pub fn into_payload(self) -> EnvironmentVariable {
+        self.0
+    }
+}
+#[rustfmt::skip]
+impl From<EnvironmentVariable> for EnvironmentSecret {
+    fn from(payload: EnvironmentVariable) -> Self {
+        Self::new(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl GopassSecret {
+    pub fn new(payload: GopassPath) -> Self {
+        Self(payload)
+    }
+    pub fn payload(&self) -> &GopassPath {
+        &self.0
+    }
+    pub fn into_payload(self) -> GopassPath {
+        self.0
+    }
+}
+#[rustfmt::skip]
+impl From<GopassPath> for GopassSecret {
+    fn from(payload: GopassPath) -> Self {
+        Self::new(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl FileSecret {
+    pub fn new(payload: SecretFilePath) -> Self {
+        Self(payload)
+    }
+    pub fn payload(&self) -> &SecretFilePath {
+        &self.0
+    }
+    pub fn into_payload(self) -> SecretFilePath {
+        self.0
+    }
+}
+#[rustfmt::skip]
+impl From<SecretFilePath> for FileSecret {
+    fn from(payload: SecretFilePath) -> Self {
         Self::new(payload)
     }
 }
@@ -435,6 +564,19 @@ impl From<LifecycleState> for Lifecycle {
 }
 
 #[rustfmt::skip]
+impl SecretSource {
+    pub fn environment(payload: EnvironmentVariable) -> Self {
+        Self::Environment(EnvironmentSecret::new(payload))
+    }
+    pub fn gopass(payload: GopassPath) -> Self {
+        Self::Gopass(GopassSecret::new(payload))
+    }
+    pub fn file(payload: SecretFilePath) -> Self {
+        Self::File(FileSecret::new(payload))
+    }
+}
+
+#[rustfmt::skip]
 impl Input {
     pub fn configure_provider(payload: ProviderConfiguration) -> Self {
         Self::ConfigureProvider(ConfigureProvider::new(payload))
@@ -475,6 +617,27 @@ impl Output {
     }
     pub fn request_unimplemented(payload: RequestUnimplemented) -> Self {
         Self::RequestUnimplemented(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl From<EnvironmentSecret> for SecretSource {
+    fn from(payload: EnvironmentSecret) -> Self {
+        Self::Environment(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl From<GopassSecret> for SecretSource {
+    fn from(payload: GopassSecret) -> Self {
+        Self::Gopass(payload)
+    }
+}
+
+#[rustfmt::skip]
+impl From<FileSecret> for SecretSource {
+    fn from(payload: FileSecret) -> Self {
+        Self::File(payload)
     }
 }
 
@@ -583,7 +746,29 @@ impl ModelName {
 
 #[rustfmt::skip]
 #[cfg(feature = "nota-text")]
-impl ApiKeyHandle {
+impl EnvironmentVariable {
+    pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
+        <Self as NotaDecode>::from_nota_block(block)
+    }
+    pub fn to_nota(&self) -> String {
+        <Self as NotaEncode>::to_nota(self)
+    }
+}
+
+#[rustfmt::skip]
+#[cfg(feature = "nota-text")]
+impl GopassPath {
+    pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
+        <Self as NotaDecode>::from_nota_block(block)
+    }
+    pub fn to_nota(&self) -> String {
+        <Self as NotaEncode>::to_nota(self)
+    }
+}
+
+#[rustfmt::skip]
+#[cfg(feature = "nota-text")]
+impl SecretFilePath {
     pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
         <Self as NotaDecode>::from_nota_block(block)
     }
@@ -595,6 +780,50 @@ impl ApiKeyHandle {
 #[rustfmt::skip]
 #[cfg(feature = "nota-text")]
 impl RejectionDetail {
+    pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
+        <Self as NotaDecode>::from_nota_block(block)
+    }
+    pub fn to_nota(&self) -> String {
+        <Self as NotaEncode>::to_nota(self)
+    }
+}
+
+#[rustfmt::skip]
+#[cfg(feature = "nota-text")]
+impl EnvironmentSecret {
+    pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
+        <Self as NotaDecode>::from_nota_block(block)
+    }
+    pub fn to_nota(&self) -> String {
+        <Self as NotaEncode>::to_nota(self)
+    }
+}
+
+#[rustfmt::skip]
+#[cfg(feature = "nota-text")]
+impl GopassSecret {
+    pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
+        <Self as NotaDecode>::from_nota_block(block)
+    }
+    pub fn to_nota(&self) -> String {
+        <Self as NotaEncode>::to_nota(self)
+    }
+}
+
+#[rustfmt::skip]
+#[cfg(feature = "nota-text")]
+impl FileSecret {
+    pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
+        <Self as NotaDecode>::from_nota_block(block)
+    }
+    pub fn to_nota(&self) -> String {
+        <Self as NotaEncode>::to_nota(self)
+    }
+}
+
+#[rustfmt::skip]
+#[cfg(feature = "nota-text")]
+impl SecretSource {
     pub fn from_nota_block(block: &nota_next::Block) -> Result<Self, NotaDecodeError> {
         <Self as NotaDecode>::from_nota_block(block)
     }

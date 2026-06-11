@@ -8,9 +8,10 @@ parsing out of this crate.
 
 `agent` makes OpenAI-compatible provider HTTP API calls; it is NOT an agent
 harness (psyche Spirit `iucr`, `f8k7`). A provider is a generic
-OpenAI-compatible API (endpoint + model + key handle); adding one is a
-`ConfigureProvider` message, never a contract change. The key handle is an
-env-var name — the secret value never crosses the wire.
+OpenAI-compatible API (endpoint + model + typed secret-source reference);
+adding one is a `ConfigureProvider` message, never a contract change. The
+secret source is an Environment, Gopass, or File reference — the secret value
+never crosses the wire.
 
 Before changing the contract surface, read:
 

@@ -34,8 +34,9 @@ Spirit:
 
 The second decision is this contract's whole reason for existing in its current
 shape: `ConfigureProvider` carries a `ProviderConfiguration` (endpoint + default
-model + key handle). Adding DeepSeek, MiMo, Kimi, GLM, or MiniMax is a message,
-never a new type. DeepSeek and MiMo are the first two configured providers.
+model + typed secret-source reference). Adding DeepSeek, MiMo, Kimi, GLM, or
+MiniMax is a message, never a new type. DeepSeek and MiMo are the first two
+configured providers.
 
 ## The channel shape
 
@@ -49,8 +50,9 @@ never a new type. DeepSeek and MiMo are the first two configured providers.
 
 - Meta mutating authority enters through this crate, not the ordinary
   `signal-agent` contract.
-- The API-key handle is an environment-variable name the daemon resolves; the
-  secret value never crosses this wire (`primary/skills/secrets.md`).
+- The API-key source is a typed backend reference (`Environment`, `Gopass`, or
+  `File`) the daemon resolves; the secret value never crosses this wire
+  (`primary/skills/secrets.md`).
 - Wire enums are closed. No `Unknown` escape hatch. No concrete provider name is
   a variant.
 - Identifiers are full English words.

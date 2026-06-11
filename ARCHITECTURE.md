@@ -20,9 +20,9 @@ agent-harness shape) is discarded.
 ## The provider model is the load-bearing decision
 
 A provider is a **generic OpenAI-compatible API**: a `ProviderConfiguration`
-carries a `ProviderName`, an `EndpointUrl`, a default `ModelName`, and an
-`ApiKeyHandle`. The key handle is the *name of an environment variable* the
-daemon resolves at call time — the secret value never crosses this wire
+carries a `ProviderName`, an `EndpointUrl`, a default `ModelName`, and a typed
+`SecretSource`. The secret source is a daemon-resolved backend reference
+(`Environment`, `Gopass`, or `File`) — the secret value never crosses this wire
 (`primary/skills/secrets.md`: an agent never sees a secret value). Adding
 DeepSeek, MiMo, Kimi, GLM, or MiniMax is a `ConfigureProvider` message, never a
 new variant or contract change.
@@ -44,8 +44,11 @@ new variant or contract change.
 ## Records
 
 - `ProviderConfiguration` — the "add a provider = configuration" record:
-  `name`, `endpoint`, `default_model`, `api_key_handle`. No per-provider type.
-- `ProviderName`, `EndpointUrl`, `ModelName`, `ApiKeyHandle` — string newtypes.
+  `name`, `endpoint`, `default_model`, `secret_source`. No per-provider type.
+- `SecretSource` — closed backend reference enum:
+  `Environment(EnvironmentSecret)`, `Gopass(GopassSecret)`, `File(FileSecret)`.
+- `ProviderName`, `EndpointUrl`, `ModelName`, `EnvironmentVariable`,
+  `GopassPath`, `SecretFilePath` — string newtypes.
 - `Lifecycle` over a closed `LifecycleState` (`Started` / `Stopped`).
 - `OrderRejectionReason` (closed): `ProviderUnknown`,
   `ProviderAlreadyConfigured`, `EndpointInvalid`, `KeyHandleMissing`,
@@ -54,7 +57,8 @@ new variant or contract change.
 ## Invariants
 
 - Meta mutating authority enters through this crate, not the ordinary contract.
-- The secret value never appears: only the key HANDLE crosses the wire.
+- The secret value never appears: only the typed secret-source reference crosses
+  the wire.
 - Wire operations are contract-local meta verbs, not Sema class wrappers.
 - Wire enums are closed. No `Unknown` escape hatch. No concrete provider name
   is a variant.
