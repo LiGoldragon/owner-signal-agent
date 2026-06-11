@@ -30,7 +30,7 @@ new variant or contract change.
 ## Contract surface
 
 - `ConfigureProvider(ConfigureProvider)` — add or update a provider
-  (endpoint + model + key handle). Reply: `ProviderConfigured(ProviderConfigured)`.
+  (endpoint + model + secret source). Reply: `ProviderConfigured(ProviderConfigured)`.
 - `RetireProvider(RetireProvider)` — remove a provider by name. Reply:
   `ProviderRetired(ProviderRetired)`.
 - `SetDefaultProvider(SetDefaultProvider)` — set the provider used when a
@@ -51,7 +51,7 @@ new variant or contract change.
   `GopassPath`, `SecretFilePath` — string newtypes.
 - `Lifecycle` over a closed `LifecycleState` (`Started` / `Stopped`).
 - `OrderRejectionReason` (closed): `ProviderUnknown`,
-  `ProviderAlreadyConfigured`, `EndpointInvalid`, `KeyHandleMissing`,
+  `ProviderAlreadyConfigured`, `EndpointInvalid`, `SecretUnavailable`,
   `PolicyStoreUnavailable`.
 
 ## Invariants
@@ -82,6 +82,6 @@ tests/round_trip.rs      rkyv frame, NOTA, and operation-kind witnesses
 
 - `/home/li/primary/skills/component-triad.md` §"Two authority tiers".
 - `/home/li/primary/skills/contract-repo.md`
-- `/home/li/primary/skills/secrets.md` — key handles, never secret values.
+- `/home/li/primary/skills/secrets.md` — secret-source references, never secret values.
 - `../agent/ARCHITECTURE.md` — daemon-side provider registry and call path.
 - `../signal-agent/ARCHITECTURE.md` — the ordinary call contract.
