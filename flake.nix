@@ -25,11 +25,14 @@
         pkgs = import nixpkgs { inherit system; };
         toolchain = fenix.packages.${system}.fromToolchainFile {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-Qxt8XAuaUR2OMdKbN4u8dBJOhSHxS+uS06Wl9+flVEk=";
+          sha256 = "sha256-gh/xTkxKHL4eiRXzWv8KP7vfjSk61Iq48x47BEDFgfk=";
         };
         craneLib = (crane.mkLib pkgs).overrideToolchain toolchain;
         examplesFilter = path: _type: builtins.match ".*/examples(/.*)?$" path != null;
-        sourceFilter = path: type: (craneLib.filterCargoSources path type) || (examplesFilter path type);
+        schemaFilter = path: type: type == "regular" && pkgs.lib.hasSuffix ".schema" path;
+        sourceFilter =
+          path: type:
+          (craneLib.filterCargoSources path type) || (examplesFilter path type) || (schemaFilter path type);
         src = pkgs.lib.cleanSourceWith {
           src = ./.;
           filter = sourceFilter;
